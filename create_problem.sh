@@ -7,17 +7,25 @@ PROBLEMS_DIR="$SCRIPT_DIR/problems"
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 <problem_number> <problem_name> [--readme]"
-    echo "Example: $0 1 TwoSum"
-    echo "Example: $0 605 CanPlaceFlowers --readme"
+    echo "Usage: $0 <category> <problem_number> <problem_name> [--readme]"
+    echo "Example: $0 array 1 TwoSum"
+    echo "Example: $0 queue 605 CanPlaceFlowers --readme"
+    echo ""
+    echo "Arguments:"
+    echo "  category         Subfolder under problems (e.g., array, queue)"
+    echo "  problem_number   LeetCode problem number (numeric)"
+    echo "  problem_name     Kotlin-friendly name (e.g., TwoSum, CanPlaceFlowers)"
     echo ""
     echo "Options:"
-    echo "  --readme, -r    Create README.md file (default: false)"
+    echo "  --readme, -r     Create README.md file (default: false)"
     exit 1
 }
 
 # Initialize variables
 CREATE_README=false
+CATEGORY=""
+PROBLEM_NUMBER=""
+PROBLEM_NAME=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -27,7 +35,9 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            if [ -z "$PROBLEM_NUMBER" ]; then
+            if [ -z "$CATEGORY" ]; then
+                CATEGORY="$1"
+            elif [ -z "$PROBLEM_NUMBER" ]; then
                 PROBLEM_NUMBER="$1"
             elif [ -z "$PROBLEM_NAME" ]; then
                 PROBLEM_NAME="$1"
@@ -41,7 +51,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if required arguments are provided
-if [ -z "$PROBLEM_NUMBER" ] || [ -z "$PROBLEM_NAME" ]; then
+if [ -z "$CATEGORY" ] || [ -z "$PROBLEM_NUMBER" ] || [ -z "$PROBLEM_NAME" ]; then
     echo "Error: Missing required arguments"
     usage
 fi
@@ -50,6 +60,13 @@ fi
 if ! [[ "$PROBLEM_NUMBER" =~ ^[0-9]+$ ]]; then
     echo "Error: Problem number must be numeric"
     usage
+fi
+
+# Validate category directory exists (or create it)
+CATEGORY_PATH="$PROBLEMS_DIR/$CATEGORY"
+if [ ! -d "$CATEGORY_PATH" ]; then
+    echo "Category '$CATEGORY' does not exist. Creating it..."
+    mkdir -p "$CATEGORY_PATH"
 fi
 
 # Format problem number with leading zeros (4 digits)
@@ -63,9 +80,9 @@ KOTLIN_CLASS_NAME=$(echo "$PROBLEM_NAME" | awk '{print toupper(substr($0,1,1)) s
 # Lowercase first letter
 FUNCTION_NAME=$(echo "$PROBLEM_NAME" | awk '{print tolower(substr($0,1,1)) substr($0,2)}')
 
-# Create folder name
+# Create folder name inside category
 FOLDER_NAME="LC${FORMATTED_NUMBER}_${PROBLEM_NAME}"
-FOLDER_PATH="$PROBLEMS_DIR/$FOLDER_NAME"
+FOLDER_PATH="$CATEGORY_PATH/$FOLDER_NAME"
 
 # Check if folder already exists
 if [ -d "$FOLDER_PATH" ]; then
@@ -191,12 +208,19 @@ echo ""
 echo "✓ Problem folder created successfully!"
 echo "  Location: $FOLDER_PATH"
 echo ""
+
+# Move into the new problem folder.
+# Note: this only affects your terminal if you *source* this script, e.g.:
+#   source create_problem.sh array 1 TwoSum
+cd "$FOLDER_PATH" || exit 1
+
+echo "Now in folder: $(pwd)"
+echo ""
 echo "Next steps:"
 if [ "$CREATE_README" = true ]; then
     echo "  1. Edit README.md with problem description"
     echo "  2. Implement solution in ${KOTLIN_CLASS_NAME}.kt"
-    echo "  3. Run: cd $FOLDER_NAME && ./run.sh"
 else
     echo "  1. Implement solution in ${KOTLIN_CLASS_NAME}.kt"
-    echo "  2. Run: cd $FOLDER_NAME && ./run.sh"
 fi
+echo "  3. Run: ./run.sh"

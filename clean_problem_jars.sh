@@ -5,16 +5,19 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROBLEMS_DIR="$SCRIPT_DIR/problems"
 
-echo "Cleaning all problem.jar files..."
+echo "Cleaning all problem.jar files inside problems/* subfolders..."
 
-# Find and remove all problem.jar files
-find "$PROBLEMS_DIR" -name "problem.jar" -type f -delete
+# Find all problem.jar files (recursively, including category folders like array/, queue/, etc.)
+JAR_FILES=$(find "$PROBLEMS_DIR" -type f -name "problem.jar" 2>/dev/null)
 
-# Count how many were removed
-removed_count=$(find "$PROBLEMS_DIR" -name "problem.jar" -type f 2>/dev/null | wc -l | tr -d ' ')
-
-if [ "$removed_count" -eq 0 ]; then
-    echo "✓ All problem.jar files have been removed successfully!"
-else
-    echo "⚠ Warning: Some problem.jar files may still exist"
+if [ -z "$JAR_FILES" ]; then
+    echo "No problem.jar files found under $PROBLEMS_DIR"
+    exit 0
 fi
+
+REMOVED_COUNT=$(printf "%s\n" "$JAR_FILES" | wc -l | tr -d ' ')
+
+printf "Found %s problem.jar file(s). Deleting...\n" "$REMOVED_COUNT"
+printf "%s\n" "$JAR_FILES" | xargs rm -f
+
+echo "✓ Removed $REMOVED_COUNT problem.jar file(s) from nested problem folders."
