@@ -12,7 +12,7 @@ usage() {
     echo "Example: $0 queue 605 CanPlaceFlowers --readme"
     echo ""
     echo "Arguments:"
-    echo "  category         Subfolder under problems (e.g., array, queue)"
+    echo "  category         Subfolder under problems (e.g., array, queue, stack)"
     echo "  problem_number   LeetCode problem number (numeric)"
     echo "  problem_name     Kotlin-friendly name (e.g., TwoSum, CanPlaceFlowers)"
     echo ""
